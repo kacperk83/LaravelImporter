@@ -15,10 +15,10 @@ class CreateCreditcardsTable extends Migration
     {
         Schema::create('creditcards', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('type');
-            $table->string('number');
-            $table->boolean('name');
-            $table->date('expiration_date');
+            $table->string('type')->nullable();
+            $table->string('number')->nullable();
+            $table->boolean('name')->nullable();
+            $table->date('expiration_date')->nullable();
             $table->integer('user_id')->unsigned()->nullable();
             $table->timestamps();
         });

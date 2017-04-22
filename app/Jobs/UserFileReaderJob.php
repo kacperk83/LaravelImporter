@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\User;
+use Carbon\Carbon;
 use App\Models\Creditcard;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Storage;
@@ -56,27 +57,68 @@ class UserFileReaderJob extends Job implements ShouldQueue
         //var_dump($parsed[0]);
         //die();
 
-        $processed_user_lines = array_flip(User::where('imported_from', $filename)->get()->map(function ($item, $key) {
+        $processedUserLines = array_flip(User::where('imported_from', $filename)->get()->map(function ($item, $key) {
             return $item->linenumber;
         })->all());
 
-        $processed_creditcard_lines = array_flip(Creditcard::where('imported_from', $filename)->get()->map(function (
+        $processedCardLines = array_flip(Creditcard::where('imported_from', $filename)->get()->map(function (
             $item,
             $key
         ) {
             return $item->linenumber;
         })->all());
 
-        //TODO: Loop over the users and store them conditionally (including line number & filename)
+        //Loop over user import and insert into DB
+        //
         //Conditions:
         // 1. Line&filename not found in DB
-        // 2. age betweek 18 - 65
+        // 2. age betweek 18 - 65 or unknown
         foreach ($parsed as $line => $user) {
+            $dateOfBirth = Carbon::parse($user->date_of_birth);
 
+            $age = $dateOfBirth->diffInYears(Carbon::now());
 
+            //Als er geen user is, ga door naar volgende regel
+            if (is_null($user)) {
+                continue;
+            }
 
+            //voeg user toe
+            if (!isset($processedUserLines[$line]) && (is_null($user->date_of_birth) || ($age > 18 && $age < 65))) {
+                $user = User::create([
+                    'name' => $user->name,
+                    'address' => $user->address,
+                    'checked' => $user->checked,
+                    'description' => $user->description,
+                    'interest' => 'bla',
+                    // 'interest' => $user->interest,
+                    'date_of_birth' => $dateOfBirth,
+                    'email' => $user->email,
+                    'account' => $user->account,
+                    'linenumber' => $line,
+                    'imported_from' => $filename
+                ]);
 
+                $user->save();
+            }
 
+            //voeg creditcard toe en koppel aan user
+            //eventueel extra regex toevoegen in conditie om te filteren op drie opeenvolgende zelfde cijfers
+            if (!isset($processedCardLines[$line]) && isset($user->credit_card)) {
+
+                /** @var Creditcard $card */
+                $card = Creditcard::create([
+                    'type' => $user->credit_card->type,
+                    'number' => $user->credit_card->number,
+                    'name' => $user->credit_card->name,
+                    'expiration_date' => $user->credit_card->expirationDate,
+                    'linenumber' => $line,
+                    'imported_from' => $filename
+                ]);
+                
+                $card->user()->associate($user);
+                $card->save();
+            }
         }
     }
 }
