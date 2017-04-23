@@ -14,7 +14,7 @@
 				{
 					"name": "http://homestead.app/admin/users/import",
 					"request": {
-						"url": "http://homestead.app/admin/users/import",
+						"url": "http://{{hostname}}/admin/users/import",
 						"method": "POST",
 						"header": [],
 						"body": {
