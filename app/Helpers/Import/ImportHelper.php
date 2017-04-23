@@ -36,6 +36,7 @@ class ImportHelper
      */
     public function getImportParser(string $extension): ImporterInterface
     {
+        //Zoek een geschikte ondersteunde importer voor de gegeven bestands extensie
         foreach ($this->supportedTypes as $type) {
 
             /** @var ImporterInterface $importer */

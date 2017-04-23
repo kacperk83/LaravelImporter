@@ -57,6 +57,7 @@ class UsersControllerTest extends TestCase
         $filename = 'challenge.json';
         $path = 'imports\challenge.json';
 
+        //Specify expected calls
         $this->mockContainer['Request']->shouldReceive('file')->with('file')->andReturnSelf();
         $this->mockContainer['Request']->shouldReceive('isValid')->andReturn(true);
 
@@ -74,6 +75,7 @@ class UsersControllerTest extends TestCase
             ->andReturn(0);
         $this->app->instance(Dispatcher::class, $this->mockContainer['dispatcher']);
 
+        //Instantiate controller & call function
         $class = new UsersController($this->mockContainer['Request'], $this->mockContainer['Job']);
         $class->import();
     }
@@ -83,6 +85,7 @@ class UsersControllerTest extends TestCase
      */
     public function testImportIncorrectFileScenario()
     {
+        //Specify expected calls
         $this->mockContainer['Request']->shouldReceive('file')->with('file')->andReturnSelf();
         $this->mockContainer['Request']->shouldReceive('isValid')->andReturn(false);
 

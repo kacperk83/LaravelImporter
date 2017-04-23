@@ -23,9 +23,7 @@ class ImporterFactory
      */
     public static function build(string $identifier)
     {
-
         $classToBuild = __NAMESPACE__ . '\\' . Str::studly($identifier);
-
 
         if (class_exists($classToBuild)) {
             return new $classToBuild();

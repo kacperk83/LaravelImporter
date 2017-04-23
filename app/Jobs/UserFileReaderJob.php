@@ -30,6 +30,8 @@ class UserFileReaderJob extends Job implements ShouldQueue
     private $path;
 
     /**
+     * Instantieer de job
+     *
      * @param string $path
      *
      * @return $this
@@ -41,6 +43,13 @@ class UserFileReaderJob extends Job implements ShouldQueue
         return $this;
     }
 
+    /**
+     * Voer de job uit
+     *
+     * @param ImportHelper $importHelper
+     *
+     * @throws Exception
+     */
     public function handle(ImportHelper $importHelper)
     {
         //Get importer
@@ -54,10 +63,12 @@ class UserFileReaderJob extends Job implements ShouldQueue
         $contents = Storage::get($this->path);
         $parsed = $importer->parse($contents);
 
+        //Get the already processed import lines for this filename and index them (user)
         $processedUserLines = array_flip(User::where('imported_from', $filename)->get()->map(function ($item, $key) {
             return $item->linenumber;
         })->all());
 
+        //Idem. But this time for the creditcards.
         $processedCardLines = array_flip(Creditcard::where('imported_from', $filename)->get()->map(function (
             $item,
             $key
@@ -65,11 +76,13 @@ class UserFileReaderJob extends Job implements ShouldQueue
             return $item->linenumber;
         })->all());
 
-        //Loop over user import and insert into DB
-        //
-        //Conditions:
-        // 1. Line&filename not found in DB
-        // 2. age betweek 18 - 65 or unknown
+        /**
+         * Loop over user import and insert into DB
+         *
+         * Conditions:
+         * 1. Line&filename not found in DB
+         * 2. age betweek 18 - 65 or unknown
+         */
         foreach ($parsed as $line => $user) {
             try {
                 $dateOfBirth = Carbon::parse($user->date_of_birth);
