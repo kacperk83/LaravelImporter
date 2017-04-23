@@ -2,8 +2,8 @@
 
 namespace Tests;
 
+use App\Http\Controllers\Admin\Users\UsersController;
 use Mockery;
-use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Http\Request;
 use App\Jobs\UserFileReaderJob;
@@ -56,7 +56,7 @@ class UsersControllerTest extends TestCase
     {
         $filename = 'challenge.json';
         $path = 'imports\challenge.json';
-        
+
         $this->mockContainer['Request']->shouldReceive('file')->with('file')->andReturnSelf();
         $this->mockContainer['Request']->shouldReceive('isValid')->andReturn(true);
 
@@ -73,15 +73,20 @@ class UsersControllerTest extends TestCase
         $this->mockContainer['dispatcher']->shouldReceive('dispatch')->once()
             ->andReturn(0);
         $this->app->instance(Dispatcher::class, $this->mockContainer['dispatcher']);
+
+        $class = new UsersController($this->mockContainer['Request'], $this->mockContainer['Job']);
+        $class->import();
     }
 
     /**
      * testImportIncorrectFileScenario
      */
-//    public function testImportIncorrectFileScenario()
-//    {
-//        $this->expectException(Exception::class);
-//        $this->mockContainer['Request']->shouldReceive('file')->with('file')->andReturnSelf();
-//        $this->mockContainer['Request']->shouldReceive('isValid')->andReturn(false);
-//    }
+    public function testImportIncorrectFileScenario()
+    {
+        $this->mockContainer['Request']->shouldReceive('file')->with('file')->andReturnSelf();
+        $this->mockContainer['Request']->shouldReceive('isValid')->andReturn(false);
+
+        $this->mockContainer['Request']->shouldReceive('file')->with('file')->andReturnSelf();
+        $this->mockContainer['Request']->shouldReceive('getClientOriginalName')->never();
+    }
 }
