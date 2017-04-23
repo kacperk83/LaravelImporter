@@ -17,7 +17,7 @@ class CreateCreditcardsTable extends Migration
             $table->increments('id');
             $table->string('type')->nullable();
             $table->string('number')->nullable();
-            $table->boolean('name')->nullable();
+            $table->string('name')->nullable();
             $table->date('expiration_date')->nullable();
             $table->integer('user_id')->unsigned()->nullable();
             $table->timestamps();

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use Exception;
 use App\Models\User;
 use Carbon\Carbon;
 use App\Models\Creditcard;
@@ -46,16 +47,12 @@ class UserFileReaderJob extends Job implements ShouldQueue
         $extension = explode('.', $this->path)[1];
         $importer = $importHelper->getImportParser($extension);
 
-        //Get Filename
+        //Get filename
         $filename = explode('/', $this->path)[1];
 
         //Get contents
         $contents = Storage::get($this->path);
         $parsed = $importer->parse($contents);
-
-        //echo count($parsed);
-        //var_dump($parsed[0]);
-        //die();
 
         $processedUserLines = array_flip(User::where('imported_from', $filename)->get()->map(function ($item, $key) {
             return $item->linenumber;
@@ -74,24 +71,23 @@ class UserFileReaderJob extends Job implements ShouldQueue
         // 1. Line&filename not found in DB
         // 2. age betweek 18 - 65 or unknown
         foreach ($parsed as $line => $user) {
-            $dateOfBirth = Carbon::parse($user->date_of_birth);
-
-            $age = $dateOfBirth->diffInYears(Carbon::now());
-
-            //Als er geen user is, ga door naar volgende regel
-            if (is_null($user)) {
-                continue;
+            try {
+                $dateOfBirth = Carbon::parse($user->date_of_birth);
+                $age = $dateOfBirth->diffInYears(Carbon::now());
+            } catch (Exception $e) {
+                $dateOfBirth = null;
+                $age = null;
             }
 
             //voeg user toe
-            if (!isset($processedUserLines[$line]) && (is_null($user->date_of_birth) || ($age > 18 && $age < 65))) {
-                $user = User::create([
+            if (!isset($processedUserLines[$line]) &&
+                (is_null($user->date_of_birth) || is_null($age) || ($age > 18 && $age < 65))) {
+                $userModel = User::create([
                     'name' => $user->name,
                     'address' => $user->address,
                     'checked' => $user->checked,
                     'description' => $user->description,
-                    'interest' => 'bla',
-                    // 'interest' => $user->interest,
+                    'interest' => $user->interest,
                     'date_of_birth' => $dateOfBirth,
                     'email' => $user->email,
                     'account' => $user->account,
@@ -99,7 +95,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
                     'imported_from' => $filename
                 ]);
 
-                $user->save();
+                $userModel->save();
             }
 
             //voeg creditcard toe en koppel aan user
@@ -111,14 +107,17 @@ class UserFileReaderJob extends Job implements ShouldQueue
                     'type' => $user->credit_card->type,
                     'number' => $user->credit_card->number,
                     'name' => $user->credit_card->name,
-                    'expiration_date' => $user->credit_card->expirationDate,
+                    'expiration_date' => Carbon::parse($user->credit_card->expirationDate),
                     'linenumber' => $line,
                     'imported_from' => $filename
                 ]);
-                
-                $card->user()->associate($user);
+
+                $card->user()->associate($userModel);
                 $card->save();
             }
         }
+
+        //Verwijder tenslotte het geuploade bestand
+        Storage::delete($this->path);
     }
 }
