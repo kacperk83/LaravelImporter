@@ -1,4 +1,4 @@
-# PixelIndustries
+# Pixelindustries
 
 Bijlage:		
 JSON-bestand:	"challenge.json".	
