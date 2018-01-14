@@ -13,12 +13,12 @@ use Closure;
 class JsonImportListener implements Listener
 {
     /**
-     * @var int $level
+     * @var int $level Nesting level in each (User) document
      */
     private $level = 0;
 
     /**
-     * @var array $stack
+     * @var array $stack Collects a full document (ie. A user+creditcard)
      */
     private $stack = [];
 
@@ -28,7 +28,7 @@ class JsonImportListener implements Listener
     private $currentKey;
 
     /**
-     * @var Closure $callback
+     * @var Closure $callback The function to execute when we have a full document
      */
     private $callback;
 

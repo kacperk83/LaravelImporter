@@ -53,51 +53,53 @@ class UserFileReaderJob extends Job implements ShouldQueue
      */
     public function handle(ImportHelper $importHelper)
     {
-        //Get importer
-        $extension = explode('.', $this->path)[1];
-        
-        /** @var ImporterInterface $importer */
-        $importer = $importHelper->getImportParser($extension);
 
-        $importer->setFilePath($this->path);
-
-        //@todo: make this parse function iterable (yield?)
-        $parsed = $importer->parse();
-
-        foreach($parsed as $item){
-            var_dump($item);
-        }
-
-        die();
-        
-        //@todo: 1. Move import related info (filename+linenumber) to UserImportLocation & CreditcardImportLocation
+        //@todo: 1. Move import related info (filepath+docnumber) to UserImportLocation & CreditcardImportLocation
         //@todo: instead of dropping it in the User model
-        //@todo: 2. fix bug: in case we don't have user we still try to create creditcard & associate it.
-        //@todo: 3. Maybe use a checksum hash instead of a filename.
+        //@todo: 2. Maybe use a checksum hash instead of a filename.
 
         //Get the already processed import lines for this filename and index them (user)
-        $processedUserLines = array_flip(User::where('imported_from', $filename)->get()->map(function ($item, $key) {
+        $processedLineNumbersWithUsers = array_flip(User::where('imported_from', $this->path)->get()->map(function ($item, $key) {
             return $item->linenumber;
         })->all());
 
         //Idem. But this time for the creditcards.
-        $processedCardLines = array_flip(Creditcard::where('imported_from', $filename)->get()->map(function (
+        $processedLineNumbersWithCards = array_flip(Creditcard::where('imported_from', $this->path)->get()->map(function (
             $item,
             $key
         ) {
             return $item->linenumber;
         })->all());
 
-        /**
-         * Loop over user import and insert into DB
-         *
-         * Conditions:
-         * 1. Line&filename not found in DB
-         * 2. age betweek 18 - 65 or unknown
-         */
-        foreach ($parsed as $line => $user) {
+
+        //Get importer
+        $extension = explode('.', $this->path)[1];
+
+        /** @var ImporterInterface $importer */
+        $importer = $importHelper->getImportParser($extension);
+
+        $importer->setFilePath($this->path);
+
+        $docNumber = 0;
+
+        $importer->setCallback(function (array $user) use (
+            $processedLineNumbersWithUsers,
+            $processedLineNumbersWithCards,
+            &$docNumber
+        ) {
+
+            /**
+             * Loop over user import and insert into DB
+             *
+             * Conditions:
+             * 1. docNumber&filepath not found in DB
+             * 2. age betweek 18 - 65 or unknown
+             */
+
+            $docNumber++;
+
             try {
-                $dateOfBirth = Carbon::parse($user->date_of_birth);
+                $dateOfBirth = Carbon::parse($user['date_of_birth']);
                 $age = $dateOfBirth->diffInYears(Carbon::now());
             } catch (Exception $e) {
                 $dateOfBirth = null;
@@ -105,42 +107,47 @@ class UserFileReaderJob extends Job implements ShouldQueue
             }
 
             //Add the user
-            if (!isset($processedUserLines[$line]) &&
-                (is_null($user->date_of_birth) || is_null($age) || ($age > 18 && $age < 65))) {
+            if (!isset($processedLineNumbersWithUsers[$docNumber]) &&
+                (is_null($user['date_of_birth']) || is_null($age) || ($age > 18 && $age < 65))) {
                 $userModel = User::create([
-                    'name' => $user->name,
-                    'address' => $user->address,
-                    'checked' => $user->checked,
-                    'description' => $user->description,
-                    'interest' => $user->interest,
+                    'name' => $user['name'],
+                    'address' => $user['address'],
+                    'checked' => $user['checked'],
+                    'description' => $user['description'],
+                    'interest' => $user['interest'],
                     'date_of_birth' => $dateOfBirth,
-                    'email' => $user->email,
-                    'account' => $user->account,
-                    'linenumber' => $line,
-                    'imported_from' => $filename
+                    'email' => $user['email'],
+                    'account' => $user['account'],
+                   // 'linenumber' => $line,
+                  //  'imported_from' => $filename
                 ]);
 
                 $userModel->save();
+            } elseif (isset($processedLineNumbersWithUsers[$docNumber])) {
+                $userModel = $processedLineNumbersWithUsers[$docNumber];
+            } else {
+                return;
             }
+
 
             //Add creditcard and associate with user
             //Optionally add extra regex to filter on three successive identical numbers
-            if (!isset($processedCardLines[$line]) && isset($user->credit_card)) {
+            if (!isset($processedLineNumbersWithCards[$docNumber]) && isset($user['credit_card'])) {
 
                 /** @var Creditcard $card */
                 $card = Creditcard::create([
-                    'type' => $user->credit_card->type,
-                    'number' => $user->credit_card->number,
-                    'name' => $user->credit_card->name,
-                    'expiration_date' => Carbon::parse($user->credit_card->expirationDate),
-                    'linenumber' => $line,
-                    'imported_from' => $filename
+                    'type' => $user['credit_card']['type'],
+                    'number' => $user['credit_card']['number'],
+                    'name' => $user['credit_card']['name'],
+                    'expiration_date' => Carbon::parse($user['credit_card']['expirationDate']),
+                   // 'linenumber' => $lineNumber,
+                   // 'imported_from' => $filename
                 ]);
 
                 $card->user()->associate($userModel);
                 $card->save();
             }
-        }
+        });
 
         //Verwijder tenslotte het geuploade bestand
         Storage::delete($this->path);

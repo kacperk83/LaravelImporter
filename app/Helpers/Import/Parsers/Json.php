@@ -20,12 +20,20 @@ class Json extends ImporterAbstract
      */
     private $type = 'json';
 
+
+    private $callback;
+
     /**
      * @return string
      */
     public function getType(): string
     {
         return $this->type;
+    }
+
+    public function setCallback(\Closure $callback)
+    {
+        $this->callback = $callback;
     }
 
     /**
@@ -38,9 +46,7 @@ class Json extends ImporterAbstract
         $stream = Storage::readStream($this->getFilePath());
 
         try {
-            $listener = new JsonImportListener(function ($jsonDocument) {
-                yield $jsonDocument;
-            });
+            $listener = new JsonImportListener($this->callback);
             $parser = new Parser($stream, $listener);
             $parser->parse();
         } catch (\Exception $e) {

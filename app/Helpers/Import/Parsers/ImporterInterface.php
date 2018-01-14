@@ -18,6 +18,9 @@ interface ImporterInterface
      */
     public function getType() : string;
 
+    
+    public function setCallback(\Closure $callback);
+    
     /**
      * @param string $path
      *
