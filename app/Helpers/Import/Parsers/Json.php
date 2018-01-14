@@ -31,7 +31,7 @@ class Json extends ImporterAbstract
         return $this->type;
     }
 
-    public function setCallback(\Closure $callback)
+    public function setCallback($callback)
     {
         $this->callback = $callback;
     }

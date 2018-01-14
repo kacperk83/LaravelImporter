@@ -3,16 +3,16 @@
 namespace App\Jobs;
 
 use App\Helpers\Import\Parsers\ImporterInterface;
-use Exception;
-use App\Models\User;
-use Carbon\Carbon;
-use App\Models\Creditcard;
+use App\Jobs\Closures\UserImportClosure;
+use App\Models\UserImportLocation;
+use App\Models\CreditcardImportLocation;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Storage;
 use App\Helpers\Import\ImportHelper;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Foundation\Bus\DispatchesJobs;
+use Exception;
 
 /**
  * Class UserFileReaderJob
@@ -53,101 +53,42 @@ class UserFileReaderJob extends Job implements ShouldQueue
      */
     public function handle(ImportHelper $importHelper)
     {
-
-        //@todo: 1. Move import related info (filepath+docnumber) to UserImportLocation & CreditcardImportLocation
-        //@todo: instead of dropping it in the User model
-        //@todo: 2. Maybe use a checksum hash instead of a filename.
-
-        //Get the already processed docnumbers for this file path and index them (user)
-        $processedDocNumbersWithUsers = array_flip(User::where('imported_from', $this->path)->get()->map(function ($item, $key) {
-            return $item->linenumber;
-        })->all());
+        //Get the already processed document numbers for this file path and index them (user)
+        $processedDocNumbersWithUsers = array_flip(array_merge(
+            UserImportLocation::where('file_path', $this->path)->get()->map(function ($item, $key) {
+                return [$item->document_id, $item->user()];
+            })->all()
+        ));
 
         //Idem. But this time for the creditcards.
-        $processedDocNumbersWithCards = array_flip(Creditcard::where('imported_from', $this->path)->get()->map(function (
-            $item,
-            $key
-        ) {
-            return $item->linenumber;
-        })->all());
+        $processedDocNumbersWithCards = array_flip((array_merge(
+            CreditcardImportlocation::where('file_path', $this->path)->get()->map(function ($item, $key) {
+            return [$item->document_id, $item->creditcard()];
+        })->all()));
 
 
-        //Get importer
+        //Get the right importer for this file type
         $extension = explode('.', $this->path)[1];
 
         /** @var ImporterInterface $importer */
         $importer = $importHelper->getImportParser($extension);
 
+        //Set the path of the file so the importer can retrieve it
         $importer->setFilePath($this->path);
 
         $docNumber = 0;
 
-        $importer->setCallback(function (array $user) use (
+        //Set the callback which contains logic for saving every user that we find in the import file
+        $userImport = new UserImportClosure(
             $processedDocNumbersWithUsers,
             $processedDocNumbersWithCards,
-            &$docNumber
-        ) {
+            $this->path,
+            $docNumber
+        );
+        $importer->setCallback($userImport);
 
-            /**
-             * Loop over user import and insert into DB
-             *
-             * Conditions:
-             * 1. docNumber&filepath not found in DB
-             * 2. age betweek 18 - 65 or unknown
-             */
-
-            $docNumber++;
-
-            try {
-                $dateOfBirth = Carbon::parse($user['date_of_birth']);
-                $age = $dateOfBirth->diffInYears(Carbon::now());
-            } catch (Exception $e) {
-                $dateOfBirth = null;
-                $age = null;
-            }
-
-            //Add the user
-            if (!isset($processedDocNumbersWithUsers[$docNumber]) &&
-                (is_null($user['date_of_birth']) || is_null($age) || ($age > 18 && $age < 65))) {
-                $userModel = User::create([
-                    'name' => $user['name'],
-                    'address' => $user['address'],
-                    'checked' => $user['checked'],
-                    'description' => $user['description'],
-                    'interest' => $user['interest'],
-                    'date_of_birth' => $dateOfBirth,
-                    'email' => $user['email'],
-                    'account' => $user['account'],
-                   // 'linenumber' => $line,
-                  //  'imported_from' => $filename
-                ]);
-
-                $userModel->save();
-            } elseif (isset($processedDocNumbersWithUsers[$docNumber])) {
-                $userModel = $processedDocNumbersWithUsers[$docNumber];
-            } else {
-                return;
-            }
-
-
-            //Add creditcard and associate with user
-            //Optionally add extra regex to filter on three successive identical numbers
-            if (!isset($processedDocNumbersWithCards[$docNumber]) && isset($user['credit_card'])) {
-
-                /** @var Creditcard $card */
-                $card = Creditcard::create([
-                    'type' => $user['credit_card']['type'],
-                    'number' => $user['credit_card']['number'],
-                    'name' => $user['credit_card']['name'],
-                    'expiration_date' => Carbon::parse($user['credit_card']['expirationDate']),
-                   // 'linenumber' => $lineNumber,
-                   // 'imported_from' => $filename
-                ]);
-
-                $card->user()->associate($userModel);
-                $card->save();
-            }
-        });
+        //Start parsing
+        $importer->parse();
 
         //Finally remove uploaded file
         Storage::delete($this->path);
