@@ -54,16 +54,16 @@ class UserFileReaderJob extends Job implements ShouldQueue
     public function handle(ImportHelper $importHelper)
     {
         //Get the already processed document numbers for this file path and index them (user)
-        $processedDocNumbersWithUsers = array_flip(array_merge(
+        $processedUserDocNumbers = array_flip(array_merge(
             UserImportLocation::where('file_path', $this->path)->get()->map(function ($item, $key) {
-                return [$item->document_id, $item->user()];
+                return $item->document_id;
             })->all()
         ));
 
         //Idem. But this time for the creditcards.
-        $processedDocNumbersWithCards = array_flip(array_merge(
+        $processedCardDocNumbers = array_flip(array_merge(
             CreditcardImportlocation::where('file_path', $this->path)->get()->map(function ($item, $key) {
-                return [$item->document_id, $item->creditcard()];
+                return $item->document_id;
             })->all()
         ));
 
@@ -81,8 +81,8 @@ class UserFileReaderJob extends Job implements ShouldQueue
 
         //Set the callback which contains logic for saving every user that we find in the import file
         $userImport = new UserImportClosure(
-            $processedDocNumbersWithUsers,
-            $processedDocNumbersWithCards,
+            $processedUserDocNumbers,
+            $processedCardDocNumbers,
             $this->path,
             $docNumber
         );

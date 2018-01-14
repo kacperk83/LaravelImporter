@@ -18,21 +18,18 @@ interface ImporterInterface
      */
     public function getType() : string;
 
-    
+    /**
+     * @param $callback
+     */
     public function setCallback($callback);
-    
+
     /**
      * @param string $path
-     *
-     * @return mixed
      */
     public function setFilePath(string $path);
 
     /**
      * Parse the contents to array
-     *
-     *
-     * @return array
      */
     public function parse();
 }

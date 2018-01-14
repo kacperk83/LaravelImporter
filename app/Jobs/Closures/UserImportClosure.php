@@ -15,24 +15,38 @@ use App\Models\CreditcardImportLocation;
  */
 class UserImportClosure
 {
+    /**
+     * @var array $processedUserDocNumbers Contains all document numbers for which we processed the users
+     */
+    private $processedUserDocNumbers;
 
-    private $processedDocNumbersWithUsers;
-    private $processedDocNumbersWithCards;
+    /**
+     * @var array $processedCardDocNumbers Contains all document numbers for which we processed the creditcards
+     */
+    private $processedCardDocNumbers;
+
+    /**
+     * @var string $filePath Contains the file path of the import file (including filename)
+     */
     private $filePath;
+
+    /**
+     * @var int $docNumber Keeps track of the current document number we are processing
+     */
     private $docNumber;
 
     /**
      * UserImportClosure constructor.
      *
-     * @param $processedDocNumbersWithUsers
-     * @param $processedDocNumbersWithCards
+     * @param $processedUserDocNumbers
+     * @param $processedCardDocNumbers
      * @param $filePath
      * @param $docNumber
      */
-    public function __construct($processedDocNumbersWithUsers, $processedDocNumbersWithCards, $filePath, &$docNumber)
+    public function __construct($processedUserDocNumbers, $processedCardDocNumbers, $filePath, &$docNumber)
     {
-        $this->processedDocNumbersWithUsers = $processedDocNumbersWithUsers;
-        $this->processedDocNumbersWithCards = $processedDocNumbersWithCards;
+        $this->processedUserDocNumbers = $processedUserDocNumbers;
+        $this->processedCardDocNumbers = $processedCardDocNumbers;
         $this->filePath = $filePath;
         $this->docNumber = $docNumber;
     }
@@ -61,10 +75,15 @@ class UserImportClosure
             $age = null;
         }
 
+        //If the age is out of our scope, early out
+        if (!(is_null($user['date_of_birth']) || is_null($age) || ($age > 18 && $age < 65))) {
+            return;
+        }
+
+        $userModel = null;
+
         //Add the user
-        if (!isset($this->processedDocNumbersWithUsers[$this->docNumber]) &&
-            (is_null($user['date_of_birth']) || is_null($age) || ($age > 18 && $age < 65))
-        ) {
+        if (!isset($this->processedUserDocNumbers[$this->docNumber])) {
             $userModel = User::create([
                 'name' => $user['name'],
                 'address' => $user['address'],
@@ -85,19 +104,20 @@ class UserImportClosure
                 'file_path' => $this->filePath,
                 'document_id' => $this->docNumber
             ]);
-            
+
             $userImport->user()->associate($userModel);
             $userImport->save();
-
-        } elseif (isset($this->processedDocNumbersWithUsers[$this->docNumber])) {
-            $userModel = $this->processedDocNumbersWithUsers[$this->docNumber];
-        } else {
-            return;
         }
 
         //Add creditcard and associate with user
         //Optionally add extra regex to filter on three successive identical numbers
-        if (!isset($this->processedDocNumbersWithCards[$this->docNumber]) && isset($user['credit_card'])) {
+        if (!isset($this->processedCardDocNumbers[$this->docNumber]) && isset($user['credit_card'])) {
+            //If for example the user was already in the DB (so we didn't have to create it) we still need it if we
+            //don't have a creditcard in the DB yet.
+            if (!$userModel) {
+                $userModel = UserImportLocation::where('file_path', $this->path)->where('document_id', $this->docNumber)
+                    ->get()->first()->user();
+            }
 
             /** @var Creditcard $card */
             $cardModel = Creditcard::create([

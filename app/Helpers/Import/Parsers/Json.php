@@ -20,20 +20,12 @@ class Json extends ImporterAbstract
      */
     private $type = 'json';
 
-
-    private $callback;
-
     /**
      * @return string
      */
     public function getType(): string
     {
         return $this->type;
-    }
-
-    public function setCallback($callback)
-    {
-        $this->callback = $callback;
     }
 
     /**
