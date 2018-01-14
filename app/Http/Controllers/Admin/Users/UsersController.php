@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Users;
 
+use App\Helpers\Import\ImportHelper;
 use App\Jobs\UserFileReaderJob;
 use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -41,12 +42,13 @@ class UsersController extends Controller
     public function import()
     {
         //Valid upload?
+
+        //@todo: replace this POST stuff with a Laravel command
         if ($this->request->file('file')->isValid()) {
-            //$extension = $this->request->file('file')->getClientOriginalExtension();
             $name = $this->request->file('file')->getClientOriginalName();
 
             //store the file
-            $path = $this->request->file('file')->storeAs('imports', $name);
+            $path = $this->request->file('file')->storeAs(ImportHelper::IMPORT_LOCATION, $name);
 
             //Run the corresponding job
             $jobId = $this->dispatch($this->userFileReaderJob->init($path));

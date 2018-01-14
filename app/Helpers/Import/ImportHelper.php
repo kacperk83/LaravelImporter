@@ -15,6 +15,10 @@ use Exception;
  */
 class ImportHelper
 {
+    
+    const IMPORT_LOCATION = 'imports';
+
+
     /**
      * @var array $supportedTypes
      */
@@ -36,7 +40,7 @@ class ImportHelper
      */
     public function getImportParser(string $extension): ImporterInterface
     {
-        //Zoek een geschikte ondersteunde importer voor de gegeven bestands extensie
+        //Find a supported imported for the given file extension
         foreach ($this->supportedTypes as $type) {
 
             /** @var ImporterInterface $importer */

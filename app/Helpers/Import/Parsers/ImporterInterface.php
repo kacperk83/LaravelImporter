@@ -19,11 +19,17 @@ interface ImporterInterface
     public function getType() : string;
 
     /**
+     * @param string $path
+     *
+     * @return mixed
+     */
+    public function setFilePath(string $path);
+
+    /**
      * Parse the contents to array
      *
-     * @param string $contents
      *
      * @return array
      */
-    public function parse(string $contents) : array;
+    public function parse();
 }

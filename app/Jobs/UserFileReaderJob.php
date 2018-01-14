@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Helpers\Import\Parsers\ImporterInterface;
 use Exception;
 use App\Models\User;
 use Carbon\Carbon;
@@ -30,7 +31,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
     private $path;
 
     /**
-     * Instantieer de job
+     * Instantiate job
      *
      * @param string $path
      *
@@ -44,7 +45,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
     }
 
     /**
-     * Voer de job uit
+     * Execute job
      *
      * @param ImportHelper $importHelper
      *
@@ -54,14 +55,25 @@ class UserFileReaderJob extends Job implements ShouldQueue
     {
         //Get importer
         $extension = explode('.', $this->path)[1];
+        
+        /** @var ImporterInterface $importer */
         $importer = $importHelper->getImportParser($extension);
 
-        //Get filename
-        $filename = explode('/', $this->path)[1];
+        $importer->setFilePath($this->path);
 
-        //Get contents
-        $contents = Storage::get($this->path);
-        $parsed = $importer->parse($contents);
+        //@todo: make this parse function iterable (yield?)
+        $parsed = $importer->parse();
+
+        foreach($parsed as $item){
+            var_dump($item);
+        }
+
+        die();
+        
+        //@todo: 1. Move import related info (filename+linenumber) to UserImportLocation & CreditcardImportLocation
+        //@todo: instead of dropping it in the User model
+        //@todo: 2. fix bug: in case we don't have user we still try to create creditcard & associate it.
+        //@todo: 3. Maybe use a checksum hash instead of a filename.
 
         //Get the already processed import lines for this filename and index them (user)
         $processedUserLines = array_flip(User::where('imported_from', $filename)->get()->map(function ($item, $key) {
@@ -92,7 +104,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
                 $age = null;
             }
 
-            //voeg user toe
+            //Add the user
             if (!isset($processedUserLines[$line]) &&
                 (is_null($user->date_of_birth) || is_null($age) || ($age > 18 && $age < 65))) {
                 $userModel = User::create([
@@ -111,8 +123,8 @@ class UserFileReaderJob extends Job implements ShouldQueue
                 $userModel->save();
             }
 
-            //voeg creditcard toe en koppel aan user
-            //eventueel extra regex toevoegen in conditie om te filteren op drie opeenvolgende zelfde cijfers
+            //Add creditcard and associate with user
+            //Optionally add extra regex to filter on three successive identical numbers
             if (!isset($processedCardLines[$line]) && isset($user->credit_card)) {
 
                 /** @var Creditcard $card */

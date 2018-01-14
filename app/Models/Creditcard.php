@@ -38,7 +38,7 @@ class Creditcard extends Model
 
     /**
      * user
-     * Een creditcard hoort bij een gebruiker
+     * A creditcard belongs to a user
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
