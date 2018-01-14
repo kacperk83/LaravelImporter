@@ -61,10 +61,11 @@ class UserFileReaderJob extends Job implements ShouldQueue
         ));
 
         //Idem. But this time for the creditcards.
-        $processedDocNumbersWithCards = array_flip((array_merge(
+        $processedDocNumbersWithCards = array_flip(array_merge(
             CreditcardImportlocation::where('file_path', $this->path)->get()->map(function ($item, $key) {
-            return [$item->document_id, $item->creditcard()];
-        })->all()));
+                return [$item->document_id, $item->creditcard()];
+            })->all()
+        ));
 
 
         //Get the right importer for this file type
