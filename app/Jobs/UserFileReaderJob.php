@@ -58,13 +58,13 @@ class UserFileReaderJob extends Job implements ShouldQueue
         //@todo: instead of dropping it in the User model
         //@todo: 2. Maybe use a checksum hash instead of a filename.
 
-        //Get the already processed import lines for this filename and index them (user)
-        $processedLineNumbersWithUsers = array_flip(User::where('imported_from', $this->path)->get()->map(function ($item, $key) {
+        //Get the already processed docnumbers for this file path and index them (user)
+        $processedDocNumbersWithUsers = array_flip(User::where('imported_from', $this->path)->get()->map(function ($item, $key) {
             return $item->linenumber;
         })->all());
 
         //Idem. But this time for the creditcards.
-        $processedLineNumbersWithCards = array_flip(Creditcard::where('imported_from', $this->path)->get()->map(function (
+        $processedDocNumbersWithCards = array_flip(Creditcard::where('imported_from', $this->path)->get()->map(function (
             $item,
             $key
         ) {
@@ -83,8 +83,8 @@ class UserFileReaderJob extends Job implements ShouldQueue
         $docNumber = 0;
 
         $importer->setCallback(function (array $user) use (
-            $processedLineNumbersWithUsers,
-            $processedLineNumbersWithCards,
+            $processedDocNumbersWithUsers,
+            $processedDocNumbersWithCards,
             &$docNumber
         ) {
 
@@ -107,7 +107,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
             }
 
             //Add the user
-            if (!isset($processedLineNumbersWithUsers[$docNumber]) &&
+            if (!isset($processedDocNumbersWithUsers[$docNumber]) &&
                 (is_null($user['date_of_birth']) || is_null($age) || ($age > 18 && $age < 65))) {
                 $userModel = User::create([
                     'name' => $user['name'],
@@ -123,8 +123,8 @@ class UserFileReaderJob extends Job implements ShouldQueue
                 ]);
 
                 $userModel->save();
-            } elseif (isset($processedLineNumbersWithUsers[$docNumber])) {
-                $userModel = $processedLineNumbersWithUsers[$docNumber];
+            } elseif (isset($processedDocNumbersWithUsers[$docNumber])) {
+                $userModel = $processedDocNumbersWithUsers[$docNumber];
             } else {
                 return;
             }
@@ -132,7 +132,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
 
             //Add creditcard and associate with user
             //Optionally add extra regex to filter on three successive identical numbers
-            if (!isset($processedLineNumbersWithCards[$docNumber]) && isset($user['credit_card'])) {
+            if (!isset($processedDocNumbersWithCards[$docNumber]) && isset($user['credit_card'])) {
 
                 /** @var Creditcard $card */
                 $card = Creditcard::create([
@@ -149,7 +149,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
             }
         });
 
-        //Verwijder tenslotte het geuploade bestand
+        //Finally remove uploaded file
         Storage::delete($this->path);
     }
 }
