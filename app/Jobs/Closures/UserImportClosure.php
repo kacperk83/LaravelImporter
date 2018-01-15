@@ -92,9 +92,7 @@ class UserImportClosure
                 'interest' => $user['interest'],
                 'date_of_birth' => $dateOfBirth,
                 'email' => $user['email'],
-                'account' => $user['account'],
-                // 'linenumber' => $line,
-                //  'imported_from' => $filename
+                'account' => $user['account']
             ]);
 
             $userModel->save();

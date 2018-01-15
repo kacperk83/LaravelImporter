@@ -22,6 +22,11 @@ class ImporterAbstract implements ImporterInterface
     protected $callback;
 
     /**
+     * @var string|null $type
+     */
+    protected $type = null;
+
+    /**
      * @param $path
      */
     public function setFilePath(string $path)
@@ -46,10 +51,19 @@ class ImporterAbstract implements ImporterInterface
     }
 
     /**
+     * @return mixed
+     */
+    public function getCallback()
+    {
+        return $this->callback;
+    }
+
+    /**
      * @return string
      */
     public function getType(): string
     {
+        return static::$type;
     }
 
     public function parse()

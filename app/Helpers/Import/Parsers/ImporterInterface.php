@@ -24,6 +24,11 @@ interface ImporterInterface
     public function setCallback($callback);
 
     /**
+     * @return mixed
+     */
+    public function getCallback();
+
+    /**
      * @param string $path
      */
     public function setFilePath(string $path);

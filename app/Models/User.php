@@ -17,8 +17,6 @@ use Carbon\Carbon;
  * @property Carbon date_of_birth
  * @property string email
  * @property string account
- * @property string imported_from
- * @property string linenumber
  *
  * @package App\Models
  *
