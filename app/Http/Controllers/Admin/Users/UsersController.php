@@ -42,8 +42,6 @@ class UsersController extends Controller
     public function import()
     {
         //Valid upload?
-
-        //@todo: replace this POST stuff with a Laravel command
         if ($this->request->file('file')->isValid()) {
             $name = $this->request->file('file')->getClientOriginalName();
 
@@ -53,6 +51,7 @@ class UsersController extends Controller
             //Run the corresponding job
             $jobId = $this->dispatch($this->userFileReaderJob->init($path));
 
+            //Return a job id
             return response()->json(['job_id' => $jobId]);
         }
 
