@@ -5,12 +5,12 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 /**
- * Class CreateCreditcardsTable
+ * Class CreateUserImportLocationsTable
  *
  *
  * @author Kacper Kowalski kacperk83@gmail.com
  */
-class CreateCreditcardsTable extends Migration
+class CreateUserImportLocationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -19,17 +19,15 @@ class CreateCreditcardsTable extends Migration
      */
     public function up()
     {
-        Schema::create('creditcards', function (Blueprint $table) {
+        Schema::create('user_import_locations', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('type')->nullable();
-            $table->string('number')->nullable();
-            $table->string('name')->nullable();
-            $table->date('expiration_date')->nullable();
-            $table->integer('user_id')->unsigned()->nullable();
+            $table->string('file_hash');
+            $table->integer('document_id');
+            $table->integer('user_id')->unsigned();
             $table->timestamps();
         });
 
-        Schema::table('creditcards', function ($table) {
+        Schema::table('user_import_locations', function ($table) {
             $table->foreign('user_id')->references('id')->on('users');
         });
     }
@@ -41,6 +39,6 @@ class CreateCreditcardsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('creditcards');
+        Schema::dropIfExists('user_import_locations');
     }
 }

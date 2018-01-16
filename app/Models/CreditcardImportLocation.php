@@ -5,9 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class UserImportLocation
+ * Class CreditcardImportLocation
  *
- * @property string file_path
+ * @property int id
+ * @property string file_hash
  * @property int document_id
  *
  * @package App\Models
@@ -21,8 +22,7 @@ class CreditcardImportLocation extends Model
      *
      * @var array
      */
-    protected $fillable = ['file_path', 'document_id'];
-
+    protected $fillable = ['file_hash', 'document_id'];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Class UserImportLocation
  *
- * @property string file_path
+ * @property int id
+ * @property string file_hash
  * @property int document_id
  *
  * @package App\Models
@@ -21,8 +22,7 @@ class UserImportLocation extends Model
      *
      * @var array
      */
-    protected $fillable = ['file_path', 'document_id'];
-
+    protected $fillable = ['file_hash', 'document_id'];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

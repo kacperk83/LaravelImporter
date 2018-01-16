@@ -36,19 +36,26 @@ class UserImportClosure
     private $docNumber;
 
     /**
+     * @var string $fileHash The hash that corresponds to the import file
+     */
+    private $fileHash;
+
+    /**
      * UserImportClosure constructor.
      *
      * @param $processedUserDocNumbers
      * @param $processedCardDocNumbers
      * @param $filePath
      * @param $docNumber
+     * @param $fileHash
      */
-    public function __construct($processedUserDocNumbers, $processedCardDocNumbers, $filePath, &$docNumber)
+    public function __construct($processedUserDocNumbers, $processedCardDocNumbers, $filePath, &$docNumber, $fileHash)
     {
         $this->processedUserDocNumbers = $processedUserDocNumbers;
         $this->processedCardDocNumbers = $processedCardDocNumbers;
         $this->filePath = $filePath;
         $this->docNumber = $docNumber;
+        $this->fileHash = $fileHash;
     }
 
     /**
@@ -65,6 +72,7 @@ class UserImportClosure
          * 2. age betweek 18 - 65 or unknown
          */
 
+        //Increment the document number. This is done by reference.
         $this->docNumber++;
 
         try {
@@ -99,7 +107,7 @@ class UserImportClosure
 
             //Also store the import location from which we got the user info
             $userImport = UserImportLocation::create([
-                'file_path' => $this->filePath,
+                'file_hash' => $this->filePath,
                 'document_id' => $this->docNumber
             ]);
 
@@ -113,7 +121,7 @@ class UserImportClosure
             //If for example the user was already in the DB (so we didn't have to create it) we still need it if we
             //don't have a creditcard in the DB yet.
             if (!$userModel) {
-                $userModel = UserImportLocation::where('file_path', $this->path)->where('document_id', $this->docNumber)
+                $userModel = UserImportLocation::where('file_hash', $this->path)->where('document_id', $this->docNumber)
                     ->get()->first()->user();
             }
 
@@ -130,7 +138,7 @@ class UserImportClosure
 
             //Also store the import location from which we got the creditcard info
             $cardImport = CreditcardImportLocation::create([
-                'file_path' => $this->filePath,
+                'file_hash' => $this->fileHash,
                 'document_id' => $this->docNumber
             ]);
 
