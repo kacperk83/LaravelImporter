@@ -1,6 +1,4 @@
-# Pixelindustries
-
-Bijlage:		
+Bijlage:
 JSON-bestand:	"challenge.json".	
 
 Opdracht	
