@@ -27,6 +27,9 @@ class UserImport extends Command
      */
     protected $signature = 'users:import';
 
+    /**
+     * @var UserFileReaderJob $importJob
+     */
     private $importJob;
 
     /**

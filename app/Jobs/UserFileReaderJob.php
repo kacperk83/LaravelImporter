@@ -58,7 +58,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
         //path
         $fileHash = File::hash(Storage::path($this->path));
 
-        //Get the already processed document numbers for this file path and index them (user)
+        //Get the already processed document numbers for this file and index them (user)
         $processedUserDocNumbers = array_flip(array_merge(
             UserImportLocation::where('file_hash', $fileHash)->get()->map(function ($item, $key) {
                 return $item->document_id;
