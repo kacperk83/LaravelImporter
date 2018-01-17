@@ -23,7 +23,7 @@ class CreateCreditcardImportLocationsTable extends Migration
             $table->increments('id');
             $table->string('file_hash');
             $table->integer('document_id');
-            $table->integer('creditcard_id')->unsigned();
+            $table->integer('creditcard_id')->nullable()->unsigned();
             $table->timestamps();
         });
 

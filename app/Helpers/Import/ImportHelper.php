@@ -15,9 +15,10 @@ use Exception;
  */
 class ImportHelper
 {
-    
+    /**
+     * Location to (temporary) store the uploaded import files
+     */
     const IMPORT_LOCATION = 'imports';
-
 
     /**
      * @var array $supportedTypes

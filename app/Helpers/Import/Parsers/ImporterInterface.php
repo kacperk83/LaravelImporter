@@ -2,6 +2,8 @@
 
 namespace App\Helpers\Import\Parsers;
 
+use App\Jobs\Closures\ImportClosureInterface;
+
 /**
  * Interface ImporterInterface
  *
@@ -19,12 +21,14 @@ interface ImporterInterface
     public function getType() : string;
 
     /**
-     * @param $callback
+     * @param ImportClosureInterface $callback
      */
-    public function setCallback($callback);
+    public function setCallback(ImportClosureInterface $callback);
 
     /**
-     * @return mixed
+     * Get the closure which will be used for the import
+     *
+     * @return ImportClosureInterface
      */
     public function getCallback();
 
@@ -36,5 +40,5 @@ interface ImporterInterface
     /**
      * Parse the contents to array
      */
-    public function parse();
+    public function parse(): void;
 }

@@ -44,19 +44,15 @@ class JsonImportListener implements Listener
 
     public function startDocument()
     {
-        echo 'start document';
     }
 
     public function endDocument()
     {
-        echo 'end document';
     }
 
     public function startObject()
     {
         $this->level++;
-
-        echo 'start object';
     }
 
     public function endObject()
@@ -67,27 +63,19 @@ class JsonImportListener implements Listener
             call_user_func($this->callback, $this->stack);
             $this->stack = [];
         }
-
-        echo 'end object';
     }
 
     public function startArray()
     {
-        echo 'start array';
-
     }
 
     public function endArray()
     {
-        echo 'start array';
     }
 
     public function key($key)
     {
         $this->currentKey = $key;
-
-        echo 'key:' . $key;
-
     }
 
     public function value($value)
@@ -97,12 +85,9 @@ class JsonImportListener implements Listener
         } else {
             $this->stack[$this->currentKey] = $value;
         }
-        echo 'value: ' . $value;
-
     }
 
     public function whitespace($whitespace)
     {
-        echo 'whitespace: ' . $whitespace;
     }
 }

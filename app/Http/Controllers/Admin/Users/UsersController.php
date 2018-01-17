@@ -49,10 +49,10 @@ class UsersController extends Controller
             $path = $this->request->file('file')->storeAs(ImportHelper::IMPORT_LOCATION, $name);
 
             //Run the corresponding job
-            $jobId = $this->dispatch($this->userFileReaderJob->init($path));
+            $this->dispatch($this->userFileReaderJob->init($path));
 
             //Return a job id
-            return response()->json(['job_id' => $jobId]);
+            return response()->json(['status' => 'ok']);
         }
 
         throw new Exception('Class not found for this import extension');

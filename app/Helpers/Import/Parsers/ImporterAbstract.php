@@ -2,6 +2,8 @@
 
 namespace App\Helpers\Import\Parsers;
 
+use App\Jobs\Closures\ImportClosureInterface;
+
 /**
  * Class ImporterAbstract
  *
@@ -17,14 +19,14 @@ class ImporterAbstract implements ImporterInterface
     protected $filePath;
 
     /**
-     * @var $callback
+     * @var ImportClosureInterface $callback
      */
     protected $callback;
 
     /**
      * @var string|null $type
      */
-    protected $type = null;
+    protected static $type = null;
 
     /**
      * @param $path
@@ -43,15 +45,15 @@ class ImporterAbstract implements ImporterInterface
     }
 
     /**
-     * @param $callback
+     * @param ImportClosureInterface $callback
      */
-    public function setCallback($callback)
+    public function setCallback(ImportClosureInterface $callback)
     {
         $this->callback = $callback;
     }
 
     /**
-     * @return mixed
+     * @return ImportClosureInterface
      */
     public function getCallback()
     {
@@ -66,7 +68,10 @@ class ImporterAbstract implements ImporterInterface
         return static::$type;
     }
 
-    public function parse()
+    /**
+     * parse
+     */
+    public function parse(): void
     {
     }
 }

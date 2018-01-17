@@ -23,7 +23,7 @@ class CreateUserImportLocationsTable extends Migration
             $table->increments('id');
             $table->string('file_hash');
             $table->integer('document_id');
-            $table->integer('user_id')->unsigned();
+            $table->integer('user_id')->nullable()->unsigned();
             $table->timestamps();
         });
 

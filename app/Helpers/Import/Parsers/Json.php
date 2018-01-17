@@ -18,15 +18,12 @@ class Json extends ImporterAbstract
     /**
      * @var string $type
      */
-    protected $type = 'json';
+    protected static $type = 'json';
 
     /**
-     * Logic which is needed to parse the given file
-     *
-     * @return array
      * @throws \Exception
      */
-    public function parse(): array
+    public function parse(): void
     {
         $stream = Storage::readStream($this->getFilePath());
 

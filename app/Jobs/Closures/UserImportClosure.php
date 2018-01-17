@@ -13,7 +13,7 @@ use App\Models\CreditcardImportLocation;
  * @author Kacper Kowalski kacperk83@gmail.com
  *
  */
-class UserImportClosure
+class UserImportClosure implements ImportClosureInterface
 {
     /**
      * @var array $processedUserDocNumbers Contains all document numbers for which we processed the users
@@ -107,7 +107,7 @@ class UserImportClosure
 
             //Also store the import location from which we got the user info
             $userImport = UserImportLocation::create([
-                'file_hash' => $this->filePath,
+                'file_hash' => $this->fileHash,
                 'document_id' => $this->docNumber
             ]);
 
