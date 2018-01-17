@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Users;
 
+use App\Helpers\Import\ImportHelper;
 use App\Jobs\UserFileReaderJob;
 use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -42,16 +43,16 @@ class UsersController extends Controller
     {
         //Valid upload?
         if ($this->request->file('file')->isValid()) {
-            //$extension = $this->request->file('file')->getClientOriginalExtension();
             $name = $this->request->file('file')->getClientOriginalName();
 
             //store the file
-            $path = $this->request->file('file')->storeAs('imports', $name);
+            $path = $this->request->file('file')->storeAs(ImportHelper::IMPORT_LOCATION, $name);
 
             //Run the corresponding job
-            $jobId = $this->dispatch($this->userFileReaderJob->init($path));
+            $this->dispatch($this->userFileReaderJob->init($path));
 
-            return response()->json(['job_id' => $jobId]);
+            //Return a job id
+            return response()->json(['status' => 'ok']);
         }
 
         throw new Exception('Class not found for this import extension');

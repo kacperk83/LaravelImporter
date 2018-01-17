@@ -17,8 +17,6 @@ use Carbon\Carbon;
  * @property Carbon date_of_birth
  * @property string email
  * @property string account
- * @property string imported_from
- * @property string linenumber
  *
  * @package App\Models
  *
@@ -38,8 +36,7 @@ class User extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'address', 'checked', 'description', 'interest', 'date_of_birth', 'email','account',
-                           'imported_from', 'linenumber'];
+    protected $fillable = ['name', 'address', 'checked', 'description', 'interest', 'date_of_birth', 'email','account'];
 
     /**
      * creditcard

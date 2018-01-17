@@ -2,16 +2,18 @@
 
 namespace App\Jobs;
 
-use Exception;
-use App\Models\User;
-use Carbon\Carbon;
-use App\Models\Creditcard;
+use App\Helpers\Import\Parsers\ImporterInterface;
+use App\Jobs\Closures\UserImportClosure;
+use App\Models\UserImportLocation;
+use App\Models\CreditcardImportLocation;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
 use App\Helpers\Import\ImportHelper;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Foundation\Bus\DispatchesJobs;
+use Exception;
 
 /**
  * Class UserFileReaderJob
@@ -30,7 +32,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
     private $path;
 
     /**
-     * Instantieer de job
+     * Instantiate job
      *
      * @param string $path
      *
@@ -44,7 +46,7 @@ class UserFileReaderJob extends Job implements ShouldQueue
     }
 
     /**
-     * Voer de job uit
+     * Execute job
      *
      * @param ImportHelper $importHelper
      *
@@ -52,85 +54,53 @@ class UserFileReaderJob extends Job implements ShouldQueue
      */
     public function handle(ImportHelper $importHelper)
     {
-        //Get importer
-        $extension = explode('.', $this->path)[1];
-        $importer = $importHelper->getImportParser($extension);
+        //Calculate the md5 that corresponds to the import file (first we need to translate the short path into a full
+        //path
+        $fileHash = File::hash(Storage::path($this->path));
 
-        //Get filename
-        $filename = explode('/', $this->path)[1];
-
-        //Get contents
-        $contents = Storage::get($this->path);
-        $parsed = $importer->parse($contents);
-
-        //Get the already processed import lines for this filename and index them (user)
-        $processedUserLines = array_flip(User::where('imported_from', $filename)->get()->map(function ($item, $key) {
-            return $item->linenumber;
-        })->all());
+        //Get the already processed document numbers for this file path and index them (user)
+        $processedUserDocNumbers = array_flip(array_merge(
+            UserImportLocation::where('file_hash', $fileHash)->get()->map(function ($item, $key) {
+                return $item->document_id;
+            })->all()
+        ));
 
         //Idem. But this time for the creditcards.
-        $processedCardLines = array_flip(Creditcard::where('imported_from', $filename)->get()->map(function (
-            $item,
-            $key
-        ) {
-            return $item->linenumber;
-        })->all());
+        $processedCardDocNumbers = array_flip(array_merge(
+            CreditcardImportlocation::where('file_hash', $fileHash)->get()->map(function ($item, $key) {
+                return $item->document_id;
+            })->all()
+        ));
 
-        /**
-         * Loop over user import and insert into DB
-         *
-         * Conditions:
-         * 1. Line&filename not found in DB
-         * 2. age betweek 18 - 65 or unknown
-         */
-        foreach ($parsed as $line => $user) {
-            try {
-                $dateOfBirth = Carbon::parse($user->date_of_birth);
-                $age = $dateOfBirth->diffInYears(Carbon::now());
-            } catch (Exception $e) {
-                $dateOfBirth = null;
-                $age = null;
-            }
 
-            //voeg user toe
-            if (!isset($processedUserLines[$line]) &&
-                (is_null($user->date_of_birth) || is_null($age) || ($age > 18 && $age < 65))) {
-                $userModel = User::create([
-                    'name' => $user->name,
-                    'address' => $user->address,
-                    'checked' => $user->checked,
-                    'description' => $user->description,
-                    'interest' => $user->interest,
-                    'date_of_birth' => $dateOfBirth,
-                    'email' => $user->email,
-                    'account' => $user->account,
-                    'linenumber' => $line,
-                    'imported_from' => $filename
-                ]);
+        //Get the right importer for this file type
+        $extension = explode('.', $this->path)[1];
 
-                $userModel->save();
-            }
+        /** @var ImporterInterface $importer */
+        $importer = $importHelper->getImportParser($extension);
 
-            //voeg creditcard toe en koppel aan user
-            //eventueel extra regex toevoegen in conditie om te filteren op drie opeenvolgende zelfde cijfers
-            if (!isset($processedCardLines[$line]) && isset($user->credit_card)) {
+        //Set the path of the file so the importer can retrieve it
+        $importer->setFilePath($this->path);
 
-                /** @var Creditcard $card */
-                $card = Creditcard::create([
-                    'type' => $user->credit_card->type,
-                    'number' => $user->credit_card->number,
-                    'name' => $user->credit_card->name,
-                    'expiration_date' => Carbon::parse($user->credit_card->expirationDate),
-                    'linenumber' => $line,
-                    'imported_from' => $filename
-                ]);
+        //The following function class closure will be called for every new document that is retrieved from the
+        //import file. Keep track of the document number so we can associate imported user data
+        $docNumber = 0;
 
-                $card->user()->associate($userModel);
-                $card->save();
-            }
-        }
+        //Set the closure which contains logic for saving every user that we find in the import file (and instantiate
+        //it with some initial data)
+        $userImport = new UserImportClosure(
+            $processedUserDocNumbers,
+            $processedCardDocNumbers,
+            $this->path,
+            $docNumber,
+            $fileHash
+        );
+        $importer->setCallback($userImport);
 
-        //Verwijder tenslotte het geuploade bestand
+        //Start parsing
+        $importer->parse();
+
+        //Finally remove uploaded file
         Storage::delete($this->path);
     }
 }

@@ -13,8 +13,6 @@ use Carbon\Carbon;
  * @property string number
  * @property string name
  * @property Carbon expiration_date
- * @property string imported_from
- * @property string linenumber
  *
  * @package App\Models
  *
@@ -34,11 +32,11 @@ class Creditcard extends Model
      *
      * @var array
      */
-    protected $fillable = ['type', 'number', 'name', 'expiration_date','imported_from', 'linenumber'];
+    protected $fillable = ['type', 'number', 'name', 'expiration_date'];
 
     /**
      * user
-     * Een creditcard hoort bij een gebruiker
+     * A creditcard belongs to a user
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */

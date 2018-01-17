@@ -2,6 +2,10 @@
 
 namespace App\Helpers\Import\Parsers;
 
+use App\Listeners\Import\JsonImportListener;
+use JsonStreamingParser\Parser;
+use Illuminate\Support\Facades\Storage;
+
 /**
  * Class Json
  *
@@ -9,30 +13,27 @@ namespace App\Helpers\Import\Parsers;
  *
  * @author  Kacper Kowalski kacperk83@gmail.com
  */
-class Json implements ImporterInterface
+class Json extends ImporterAbstract
 {
     /**
      * @var string $type
      */
-    private $type = 'json';
+    protected static $type = 'json';
 
     /**
-     * @return string
+     * @throws \Exception
      */
-    public function getType(): string
+    public function parse(): void
     {
-        return $this->type;
-    }
+        $stream = Storage::readStream($this->getFilePath());
 
-    /**
-     * Parse the contents to array
-     *
-     * @param string $contents
-     *
-     * @return array
-     */
-    public function parse(string $contents): array
-    {
-        return json_decode($contents);
+        try {
+            $listener = new JsonImportListener($this->getCallback());
+            $parser = new Parser($stream, $listener);
+            $parser->parse();
+        } catch (\Exception $e) {
+            fclose($stream);
+            throw $e;
+        }
     }
 }
