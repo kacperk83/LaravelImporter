@@ -2,6 +2,7 @@
 
 namespace App\Helpers\Import\Parsers;
 
+use App\Exceptions\InternalServerException;
 use App\Listeners\Import\JsonImportListener;
 use JsonStreamingParser\Parser;
 use Illuminate\Support\Facades\Storage;
@@ -31,9 +32,10 @@ class Json extends ImporterAbstract
             $listener = new JsonImportListener($this->getCallback());
             $parser = new Parser($stream, $listener);
             $parser->parse();
+
         } catch (\Exception $e) {
             fclose($stream);
-            throw $e;
+            throw new InternalServerException(trans('errors.import.json', ['filePath' => $this->getFilePath()]), $e);
         }
     }
 }
