@@ -37,7 +37,6 @@ class UsersRepository
     {
         return $this->user->newQuery()
                     ->where('id', $id)
-                    ->with('creditcards')
                     ->get()
                     ->first();
     }
