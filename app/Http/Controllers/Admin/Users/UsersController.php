@@ -7,7 +7,6 @@ use App\Jobs\UserFileReaderJob;
 use Illuminate\Routing\Controller;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Http\Request;
-use Exception;
 
 /**
  * Class UsersController

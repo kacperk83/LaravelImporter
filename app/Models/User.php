@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
@@ -24,13 +25,6 @@ use Carbon\Carbon;
  */
 class User extends Model
 {
-    /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = ['date_of_birth'];
-
     /**
      * The attributes that are mass assignable.
      *
