@@ -21,6 +21,7 @@ class UserResponse extends BaseResponse
         'interest' => 'interest',
         'date_of_birth' => 'date_of_birth',
         'email' => 'email',
-        'account' => 'account'
+        'account' => 'account',
+        'creditcards' => 'creditcards'
     ];
 }

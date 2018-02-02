@@ -29,15 +29,17 @@ class UsersRepository
     }
 
     /**
-     * @param $id
+     * @param int   $id
+     * @param array $expands
      *
      * @return User
      */
-    public function get(int $id)
+    public function get(int $id, array $expands)
     {
         return $this->user->newQuery()
-                    ->where('id', $id)
-                    ->get()
-                    ->first();
+            ->where('id', $id)
+            ->with($expands)
+            ->get()
+            ->first();
     }
 }

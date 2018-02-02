@@ -3,6 +3,8 @@
 namespace App\Http\Responses;
 
 use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Class BaseResponse
@@ -14,7 +16,7 @@ use Illuminate\Contracts\Support\Responsable;
 class BaseResponse implements Responsable
 {
     /**
-     * @var null $object
+     * @var null|Model $object
      */
     protected $object = null;
 
@@ -24,9 +26,9 @@ class BaseResponse implements Responsable
     protected $mapping = [];
 
     /**
-     * @param $object
+     * @param Model $object
      */
-    public function setObject($object)
+    public function setObject(Model $object)
     {
         $this->object = $object;
     }
@@ -49,7 +51,17 @@ class BaseResponse implements Responsable
     {
         $output = [];
 
+        //Get all the eager loaded relations
+        $relations = $this->object->getRelations();
+
+        //Apply mapping
         foreach ($this->mapping as $key => $value) {
+            //If there is no attribute and no loaded relation, skip this mapping
+            if (!Schema::hasColumn($this->object->getTable(), $value) &&
+            !isset($relations[$value])) {
+                continue;
+            }
+
             $output[$key] = $this->object->{$value};
         }
 

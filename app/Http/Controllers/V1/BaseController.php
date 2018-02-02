@@ -28,4 +28,12 @@ class BaseController extends Controller
     {
         $this->request = $request;
     }
+
+    /**
+     * @return array
+     */
+    public function getExpands()
+    {
+        return $this->request->query('expand', []);
+    }
 }

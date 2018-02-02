@@ -17,7 +17,7 @@ use App\Repositories\UsersRepository;
 class UsersController extends BaseController
 {
     /**
-     * @var UsersRepository $userRepo
+     * @var UsersRepository $repo
      */
     private $repo;
 
@@ -51,10 +51,13 @@ class UsersController extends BaseController
      */
     public function show(int $id)
     {
-        //@todo: validation
+        //validate data
+        $this->request->validate([
+            'expand' => 'sometimes|array|in:creditcards'
+        ]);
 
         //Get the data
-        $user = $this->repo->get($id);
+        $user = $this->repo->get($id, $this->getExpands());
 
         //Make the retrieved object available to the response
         $this->userResponse->setObject($user);
