@@ -8,15 +8,15 @@ Route::group(
     ],
     function () {
 
-        // Galleries
+        // Users
         Route::resource(
             'users',
             'Users\UsersController',
             [
                 'only' => ['index', 'show'],
                 'names' => [
-                    'index' => 'galleries.index',
-                    'show' => 'galleries.show',
+                    'index' => 'users.index',
+                    'show' => 'users.show',
                 ]
             ]
         );

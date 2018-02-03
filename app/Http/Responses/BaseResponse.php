@@ -16,9 +16,14 @@ use Illuminate\Support\Facades\Schema;
 class BaseResponse implements Responsable
 {
     /**
-     * @var null|Model $object
+     * @var null|Model $singleObject
      */
-    protected $object = null;
+    protected $singleObject = null;
+
+    /**
+     * @var array $arrayOfObjects
+     */
+    protected $arrayOfObjects = [];
 
     /**
      * @var array $mapping
@@ -28,9 +33,14 @@ class BaseResponse implements Responsable
     /**
      * @param Model $object
      */
-    public function setObject(Model $object)
+    public function setSingleObject(Model $object)
     {
-        $this->object = $object;
+        $this->singleObject = $object;
+    }
+
+    public function setArrayOfObjects(array $objects)
+    {
+        $this->arrayOfObjects = $objects;
     }
 
     /**
@@ -40,29 +50,49 @@ class BaseResponse implements Responsable
      */
     public function toResponse($request)
     {
-        $data = $this->map();
+        $data = isset($this->arrayOfObjects) ?
+            $this->mapArrayOfObjects($this->arrayOfObjects) :
+            $this->mapSingleObject($this->singleObject);
+
         return response()->json($data);
     }
 
     /**
+     * @param $arrayOfObjects
+     *
      * @return array
      */
-    private function map()
+    private function mapArrayOfObjects($arrayOfObjects)
+    {
+        $data = [];
+        foreach ($arrayOfObjects as $object) {
+            $data[] = $this->mapSingleObject($object);
+        }
+        return $data;
+    }
+
+    /**
+     * @param Model $object
+     *
+     * @return array
+     */
+    private function mapSingleObject(Model $object)
     {
         $output = [];
 
         //Get all the eager loaded relations
-        $relations = $this->object->getRelations();
+        $relations = $object->getRelations();
 
         //Apply mapping
         foreach ($this->mapping as $key => $value) {
             //If there is no attribute and no loaded relation, skip this mapping
-            if (!Schema::hasColumn($this->object->getTable(), $value) &&
-            !isset($relations[$value])) {
+            if (!Schema::hasColumn($object->getTable(), $value) &&
+                !isset($relations[$value])
+            ) {
                 continue;
             }
 
-            $output[$key] = $this->object->{$value};
+            $output[$key] = $object->{$value};
         }
 
         return $output;

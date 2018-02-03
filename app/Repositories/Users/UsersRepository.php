@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Repositories;
+namespace App\Repositories\Users;
 
 use App\Models\User;
+use App\Repositories\BaseRepository;
 
 /**
  * Class UsersRepository
@@ -11,12 +12,8 @@ use App\Models\User;
  *
  * @author  Kacper Kowalski kacperk83@gmail.com
  */
-class UsersRepository
+class UsersRepository extends BaseRepository
 {
-    /**
-     * @var User $user
-     */
-    private $user;
 
     /**
      * UsersRepository constructor.
@@ -25,21 +22,6 @@ class UsersRepository
      */
     public function __construct(User $user)
     {
-        $this->user = $user;
-    }
-
-    /**
-     * @param int   $id
-     * @param array $expands
-     *
-     * @return User
-     */
-    public function get(int $id, array $expands)
-    {
-        return $this->user->newQuery()
-            ->where('id', $id)
-            ->with($expands)
-            ->get()
-            ->first();
+        parent::__construct($user);
     }
 }

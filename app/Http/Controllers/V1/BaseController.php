@@ -20,6 +20,11 @@ class BaseController extends Controller
     protected $request;
 
     /**
+     * @var array $queryParams
+     */
+    protected $queryParams;
+
+    /**
      * BaseController constructor.
      *
      * @param Request $request
@@ -30,10 +35,15 @@ class BaseController extends Controller
     }
 
     /**
+     * @deprecated
+     *
      * @return array
      */
     public function getExpands()
     {
         return $this->request->query('expand', []);
     }
+
+    //@todo: ophalen query parameters zoals: expand, limit en offset
+    //@todo: + valideren + plaatsen in $queryParams
 }

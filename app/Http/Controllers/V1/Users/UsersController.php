@@ -5,7 +5,7 @@ namespace App\Http\Controllers\V1\Users;
 use App\Http\Controllers\V1\BaseController;
 use Illuminate\Http\Request;
 use App\Http\Responses\UserResponse;
-use App\Repositories\UsersRepository;
+use App\Repositories\Users\UsersRepository;
 
 /**
  * Class UsersController
@@ -45,22 +45,43 @@ class UsersController extends BaseController
     }
 
     /**
+     * @return UserResponse
+     */
+    public function index()
+    {
+        //Additional validation
+        $this->request->validate([
+            'expand' => 'sometimes|array|in:creditcards',
+        ]);
+
+        // Get the data
+        $collection = $this->repo->getAll($this->queryParams);
+        $users = $collection->all();
+
+        //Make the retrieved objects available to the response
+        $this->userResponse->setArrayOfObjects($users);
+
+        //Return the response
+        return $this->userResponse;
+    }
+
+    /**
      * @param int $id
      *
      * @return UserResponse
      */
     public function show(int $id)
     {
-        //validate data
+        //Additional validation
         $this->request->validate([
-            'expand' => 'sometimes|array|in:creditcards'
+            'expand' => 'sometimes|array|in:creditcards',
         ]);
 
         //Get the data
-        $user = $this->repo->get($id, $this->getExpands());
+        $user = $this->repo->get($id, $this->queryParams);
 
         //Make the retrieved object available to the response
-        $this->userResponse->setObject($user);
+        $this->userResponse->setSingleObject($user);
 
         //Return the response
         return $this->userResponse;
