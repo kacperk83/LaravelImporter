@@ -49,13 +49,17 @@ class UsersController extends BaseController
      */
     public function index()
     {
+        //Don't allow these query params
+        $this->deleteQueryParams(['limit', 'offset']);
+
         //Additional validation
-        $this->request->validate([
-            'expand' => 'sometimes|array|in:creditcards',
-        ]);
+        $this->updateQueryParamRules('expand', 'array|in:creditcards');
+
+        //Process query params
+        $this->processQueryParams();
 
         // Get the data
-        $collection = $this->repo->getAll($this->queryParams);
+        $collection = $this->repo->getAll($this->getCleanQueryParams());
         $users = $collection->all();
 
         //Make the retrieved objects available to the response
@@ -73,12 +77,13 @@ class UsersController extends BaseController
     public function show(int $id)
     {
         //Additional validation
-        $this->request->validate([
-            'expand' => 'sometimes|array|in:creditcards',
-        ]);
+        $this->updateQueryParamRules('expand', 'array|in:creditcards');
+
+        //Process query params
+        $this->processQueryParams();
 
         //Get the data
-        $user = $this->repo->get($id, $this->queryParams);
+        $user = $this->repo->get($id, $this->getCleanQueryParams());
 
         //Make the retrieved object available to the response
         $this->userResponse->setSingleObject($user);
