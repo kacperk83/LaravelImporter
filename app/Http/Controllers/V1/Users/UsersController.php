@@ -49,9 +49,6 @@ class UsersController extends BaseController
      */
     public function index()
     {
-        //Don't allow these query params
-        $this->deleteQueryParams(['limit', 'offset']);
-
         //Additional validation
         $this->updateQueryParamRules('expand', 'array|in:creditcards');
 
@@ -76,8 +73,11 @@ class UsersController extends BaseController
      */
     public function show(int $id)
     {
+        //Don't allow these query params
+        $this->deleteQueryParams([self::LIMIT, self::OFFSET]);
+
         //Additional validation
-        $this->updateQueryParamRules('expand', 'array|in:creditcards');
+        $this->updateQueryParamRules(self::EXPAND, 'array|in:creditcards');
 
         //Process query params
         $this->processQueryParams();

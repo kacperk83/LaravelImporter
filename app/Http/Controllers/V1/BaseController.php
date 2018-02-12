@@ -26,19 +26,26 @@ class BaseController extends Controller
     protected $cleanQueryParams = [];
 
     /**
+     * constants
+     */
+    const EXPAND = 'expand';
+    const LIMIT = 'limit';
+    const OFFSET = 'offset';
+
+    /**
      * @var array $queryParams
      */
     protected $queryParams = [
 
-        'expand' => [
+        self::EXPAND => [
             'rules' => 'array',
             'default' => []
         ],
-        'limit' => [
+        self::LIMIT => [
             'rules' => 'int',
             'default' => 10
         ],
-        'offset' => [
+        self::OFFSET => [
             'rules' => 'int',
             'default' => 0
         ]

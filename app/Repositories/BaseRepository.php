@@ -2,14 +2,17 @@
 
 namespace App\Repositories;
 
+use App\Http\Controllers\V1\BaseController;
 use Illuminate\Database\Eloquent\Model;
 use \Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
+ * Class BaseRepository
  *
- * @author Kacper Kowalski kacperk83@gmail.com
+ * @package App\Repositories
  *
+ * @author  Kacper Kowalski kacperk83@gmail.com
  */
 class BaseRepository
 {
@@ -83,8 +86,8 @@ class BaseRepository
      */
     private function processExpandParams(array $queryParams, Builder $builder)
     {
-        if (isset($queryParams['expand'])) {
-            $builder->with($queryParams['expand']);
+        if (isset($queryParams[BaseController::EXPAND])) {
+            $builder->with($queryParams[BaseController::EXPAND]);
         }
         return $builder;
     }
@@ -97,12 +100,16 @@ class BaseRepository
      */
     private function processLimitOffsetParams(array $queryParams, Builder $builder)
     {
-        if (isset($queryParams['limit'])
-            && is_numeric($queryParams['limit'])
-            && isset($queryParams['offset'])
-            && is_numeric($queryParams['offset'])
+        if (isset($queryParams[BaseController::LIMIT])
+            && is_numeric($queryParams[BaseController::LIMIT])
+            && isset($queryParams[BaseController::OFFSET])
+            && is_numeric($queryParams[BaseController::OFFSET])
         ) {
-            return $builder->take((int)$queryParams['limit'])->skip((int)$queryParams['offset']);
+            return $builder->take(
+                (int)$queryParams[BaseController::LIMIT]
+            )->skip(
+                (int)$queryParams[BaseController::OFFSET]
+            );
         } else {
             return $builder;
         }
