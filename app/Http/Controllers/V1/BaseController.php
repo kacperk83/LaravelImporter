@@ -33,6 +33,8 @@ class BaseController extends Controller
     const OFFSET = 'offset';
 
     /**
+     * Here we define all the possible query parameters
+     *
      * @var array $queryParams
      */
     protected $queryParams = [
@@ -63,8 +65,6 @@ class BaseController extends Controller
     }
 
     /**
-     * processQueryParams
-     *
      * Here we collect the possible queryparams. If there is no value provided for a queryparam
      * we take the default one. Finally we validate every parameter.
      */
@@ -85,7 +85,7 @@ class BaseController extends Controller
     }
 
     /**
-     * getCleanQueryParams
+     * Return the query params after they have been processed
      */
     protected function getCleanQueryParams()
     {
@@ -93,6 +93,8 @@ class BaseController extends Controller
     }
 
     /**
+     * Modify the rules for a given query param
+     *
      * @param string $queryParam
      * @param string $rules
      */
@@ -102,10 +104,21 @@ class BaseController extends Controller
     }
 
     /**
+     * Delete one or more query params (because, for example, they are not allowed and we want
+     * to ignore them)
+     *
      * @param array $params
      */
     protected function deleteQueryParams(array $params)
     {
-        $this->queryParams = array_diff($params, $this->queryParams);
+        $oldQueryParams = $this->queryParams;
+
+        $keepThisQueryParams = array_diff(array_keys($this->queryParams), $params);
+
+        $newQueryParams = [];
+        foreach ($keepThisQueryParams as $param) {
+            $newQueryParams[$param] = $oldQueryParams[$param];
+        }
+        $this->queryParams = $newQueryParams;
     }
 }

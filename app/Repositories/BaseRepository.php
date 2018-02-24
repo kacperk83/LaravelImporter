@@ -32,6 +32,8 @@ class BaseRepository
     }
 
     /**
+     * Get single result
+     *
      * @param int   $id
      * @param array $queryParams
      *
@@ -48,6 +50,8 @@ class BaseRepository
     }
 
     /**
+     * Get multiple results
+     *
      * @param array $queryParams
      *
      * @return Collection
@@ -61,8 +65,7 @@ class BaseRepository
     }
 
     /**
-     * processQueryParams
-     * Verwerk de diverse query parameters.
+     * Process the possible query params (limit, offset & expand)
      *
      * @param array $queryParams
      * @param       $builder
@@ -79,6 +82,8 @@ class BaseRepository
     }
 
     /**
+     * Add the expand to the query builder
+     *
      * @param array $queryParams
      * @param       $builder
      *
@@ -93,6 +98,8 @@ class BaseRepository
     }
 
     /**
+     * Add the limit & offset to the query builder
+     *
      * @param array   $queryParams
      * @param Builder $builder
      *

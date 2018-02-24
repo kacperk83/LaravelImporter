@@ -33,7 +33,6 @@ class User extends Model
     protected $fillable = ['name', 'address', 'checked', 'description', 'interest', 'date_of_birth', 'email','account'];
 
     /**
-     * creditcard
      * Een user kan meerdere creditcards hebben
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

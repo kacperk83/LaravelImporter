@@ -4,7 +4,6 @@ namespace App\Http\Responses;
 
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * Class BaseResponse
@@ -23,14 +22,21 @@ class BaseResponse implements Responsable
     /**
      * @var array $arrayOfObjects
      */
-    protected $arrayOfObjects = [];
+    protected $arrayOfObjects = null;
 
     /**
      * @var array $mapping
      */
-    protected $mapping = [];
+    protected $defaultMapping = [];
 
     /**
+     * @var array $expandMapping
+     */
+    protected $expandMapping = [];
+
+    /**
+     * We want to output a single result
+     *
      * @param Model $object
      */
     public function setSingleObject(Model $object)
@@ -38,12 +44,19 @@ class BaseResponse implements Responsable
         $this->singleObject = $object;
     }
 
+    /**
+     * We want to output multiple results
+     *
+     * @param array $objects
+     */
     public function setArrayOfObjects(array $objects)
     {
         $this->arrayOfObjects = $objects;
     }
 
     /**
+     * Called by laravel while creating the response
+     *
      * @param \Illuminate\Http\Request $request
      *
      * @return \Illuminate\Http\JsonResponse
@@ -58,6 +71,8 @@ class BaseResponse implements Responsable
     }
 
     /**
+     * Map multiple results
+     *
      * @param $arrayOfObjects
      *
      * @return array
@@ -72,6 +87,8 @@ class BaseResponse implements Responsable
     }
 
     /**
+     * Map a single result
+     *
      * @param Model $object
      *
      * @return array
@@ -80,19 +97,29 @@ class BaseResponse implements Responsable
     {
         $output = [];
 
+        //Apply default mapping
+        foreach ($this->defaultMapping as $key => $value) {
+            $output[$key] = $object->{$value};
+        }
+
         //Get all the eager loaded relations
         $relations = $object->getRelations();
 
-        //Apply mapping
-        foreach ($this->mapping as $key => $value) {
-            //If there is no attribute and no loaded relation, skip this mapping
-            if (!Schema::hasColumn($object->getTable(), $value) &&
-                !isset($relations[$value])
-            ) {
+        //Try to map every possible expand relation
+        foreach ($this->expandMapping as $relation => $mappings) {
+            //Skip relations which aren't loaded
+            if (!isset($relations[$relation])) {
                 continue;
             }
-
-            $output[$key] = $object->{$value};
+            //Map every entity in the relation
+            foreach ($object->{$relation} as $relationEntity) {
+                $mappedRelationEntity = [];
+                //Apply all mappings for this relation entity
+                foreach ($mappings as $key => $value) {
+                    $mappedRelationEntity[$key] = $relationEntity->{$value};
+                }
+                $output[$relation][] = $mappedRelationEntity;
+            }
         }
 
         return $output;

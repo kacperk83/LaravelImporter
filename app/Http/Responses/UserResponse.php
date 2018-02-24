@@ -14,14 +14,26 @@ class UserResponse extends BaseResponse
     /**
      * @var array $mapping
      */
-    protected $mapping = [
+    protected $defaultMapping = [
         'id' => 'id',
         'name' => 'name',
         'address' => 'address',
         'interest' => 'interest',
         'date_of_birth' => 'date_of_birth',
         'email' => 'email',
-        'account' => 'account',
-        'creditcards' => 'creditcards'
+        'account' => 'account'
+    ];
+
+    /**
+     * @var array $expandMapping
+     */
+    protected $expandMapping = [
+            'creditcards' => [
+                'id' => 'id',
+                'type' => 'type',
+                'number' => 'number',
+                'name' => 'name',
+                'expiration_date' => 'expiration_date'
+            ]
     ];
 }

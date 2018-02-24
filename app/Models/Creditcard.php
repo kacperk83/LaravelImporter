@@ -21,13 +21,6 @@ use Carbon\Carbon;
 class Creditcard extends Model
 {
     /**
-     * The attributes that should be mutated to dates.
-     *
-     * @var array
-     */
-    protected $dates = ['expiration_date'];
-
-    /**
      * The attributes that are mass assignable.
      *
      * @var array
@@ -35,7 +28,6 @@ class Creditcard extends Model
     protected $fillable = ['type', 'number', 'name', 'expiration_date'];
 
     /**
-     * user
      * A creditcard belongs to a user
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
