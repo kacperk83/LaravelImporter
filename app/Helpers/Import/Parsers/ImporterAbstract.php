@@ -11,7 +11,7 @@ use App\Jobs\Closures\ImportClosureInterface;
  *
  * @author  Kacper Kowalski kacperk83@gmail.com
  */
-class ImporterAbstract implements ImporterInterface
+abstract class ImporterAbstract
 {
     /**
      * @var string $filePath
@@ -71,7 +71,5 @@ class ImporterAbstract implements ImporterInterface
     /**
      * parse
      */
-    public function parse(): void
-    {
-    }
+    abstract public function parse();
 }

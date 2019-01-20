@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * @author  Kacper Kowalski kacperk83@gmail.com
  */
-class Json extends ImporterAbstract
+class Json extends ImporterAbstract implements ImporterInterface
 {
     /**
      * @var string $type
